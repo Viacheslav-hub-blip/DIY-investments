@@ -1,5 +1,17 @@
-<h1 align="center">Hi there, I'm <a href="https://daniilshat.ru/" target="_blank">Viacheslav</a> 
-<img src="https://github.com/blackcater/blackcater/raw/main/images/Hi.gif" height="32"/></h1>
-<h3 align="center">Computer science student from BMSTU</h3>
+<h3>FinancePlatform - проект для сравнения для поиска наиболее перспективных компаний. Узанйте все мультипликаторы той или иной компании и сравните их со среднем значением по отрали</h3>
+Католог database  - подключение к базе данных
 
-<h3>FinancePlatform - проект для получения полной информации о компании, ее мультипликаторах</h3>
+finance_api - работа с данными компаний
+BuilderCompany  - создание готовых обьектов компаний со всеми данными
+BuilterCompanySectors  - разделение компаний по секторам(отрасслям)
+BuilderMultiplactures  - создание мультипликаторов
+Finance_api - обращение к yahoofinance
+FinanceService  - получение данных
+
+langchain_api - работа с языковой моделью
+config  - выбор модели
+LLMModelAPI - инициализауия модели
+
+migrations  - миграции
+
+user_api  - работа с пользователями
