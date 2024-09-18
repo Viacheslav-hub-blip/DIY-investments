@@ -12,7 +12,6 @@ engine = create_engine(
 )
 
 session_factory = sessionmaker(engine)
-print('session', session_factory)
 
 
 def get_session():
