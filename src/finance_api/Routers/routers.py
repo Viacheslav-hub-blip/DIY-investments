@@ -38,16 +38,12 @@ async def get_companies_data_preview():
 
 @router.get("/company")
 async def get_company_all_data(company: str):
-    print('gte comp')
-    print(time.strftime('%X'))
     data = builder.createAllData(company)
-    print(time.strftime('%X'))
     return data._asdict()
 
 
 @router.get("/liked_companies")
 async def get_liked_companies_preview(companies: str):
-    print('comp', companies)
     companies = [comp for comp in companies.split(' ') if len(comp) > 1]
     companies_data = []
     for company in companies:
