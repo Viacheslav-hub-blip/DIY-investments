@@ -1,9 +1,9 @@
 import time
 from datetime import datetime
 from typing import NamedTuple
-from src.finance_api.FinanceService import FinanceService, RecomendationsOnMonth, PriceInform
-from src.finance_api.BuilderMuliplactures import BuilderMultiplactures
-from src.finance_api.BuilderCompanySectors import BuilderCompanySectors
+from src.finance_api.Services.FinanceService import FinanceService, RecomendationsOnMonth, PriceInform
+from src.finance_api.Builders.BuilderMuliplactures import BuilderMultiplactures
+from src.finance_api.Builders.BuilderCompanySectors import BuilderCompanySectors
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 
 

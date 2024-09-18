@@ -1,7 +1,7 @@
 import copy
 import time
 
-from src.finance_api.FinanceService import FinanceService
+from src.finance_api.Services.FinanceService import FinanceService
 from datetime import datetime, timedelta
 
 

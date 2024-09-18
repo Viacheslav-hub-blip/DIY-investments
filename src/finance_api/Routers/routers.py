@@ -1,8 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from src.finance_api.BuilderCompanyData import BuilderCompany
-from src.finance_api.BuilderCompanySectors import BuilderCompanySectors
-from src.finance_api.FinanceService import FinanceService
+from src.finance_api.Builders.BuilderCompanyData import BuilderCompany
+from src.finance_api.Builders.BuilderCompanySectors import BuilderCompanySectors
+from src.finance_api.Services.FinanceService import FinanceService
 from fastapi import APIRouter
 import time
 

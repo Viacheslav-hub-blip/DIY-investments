@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from src.finance_api.routers import router as finance_router
+from src.finance_api.Routers.routers import router as finance_router
 from src.users_api.routers import router as user_router
 
 from src.langchain_api.routers import router as router_langchain

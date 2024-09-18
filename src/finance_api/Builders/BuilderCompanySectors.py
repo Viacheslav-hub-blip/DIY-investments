@@ -1,7 +1,7 @@
 import time
 
-from src.finance_api.BuilderMuliplactures import BuilderMultiplactures
-from src.finance_api.FinanceService import FinanceService
+from src.finance_api.Builders.BuilderMuliplactures import BuilderMultiplactures
+from src.finance_api.Services.FinanceService import FinanceService
 
 
 class BuilderCompanySectors:
