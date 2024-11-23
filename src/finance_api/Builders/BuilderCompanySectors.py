@@ -29,20 +29,3 @@ class BuilderCompanySectors:
                 sectors_with_companies[company_sector] = [company]
         return sectors_with_companies
 
-
-if __name__ == "__main__":
-    print(time.strftime('%X'))
-    companies = [
-        'GOOG',
-        'AAPL',
-        'MSFT',
-        'NVDA',
-        'META',
-        'TSLA',
-        'AMZN'
-    ]
-    builder = BuilderCompanySectors(companies)
-    companies = builder.another_company_in_company_sector(companies[0])
-    print(companies)
-    # companies.remove('GOOG')
-    # print(companies)
