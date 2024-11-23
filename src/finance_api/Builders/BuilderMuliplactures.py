@@ -1,248 +1,208 @@
-import copy
+import enum
 import time
-
+from typing import Optional, NamedTuple
 from src.finance_api.Services.FinanceService import FinanceService
-from datetime import datetime, timedelta
+
+
+class MultiEnum(enum.Enum):
+    pe: str = 'PE'
+    pb: str = 'PB'
+    roe: str = 'ROE'
+    eps: str = 'EPS'
+    quick_ratio: str = 'QR'
+    dept_equity: str = 'DQ'
+
+
+class AllMulti(NamedTuple):
+    pe: dict[str, Optional[float]]
+    pb: dict[str, Optional[float]]
+    roe: dict[str, Optional[float]]
+    eps: dict[str, Optional[float]]
+    quick_ratio: dict[str, Optional[float]]
+    dept_equity: dict[str, Optional[float]]
 
 
 class BuilderMultiplactures:
-    def __init__(self):
-        self.yahoo_service = FinanceService()
+    yahoo_service = FinanceService()
 
-    def get_company_PE(self, company: str) -> dict:
-        net_income = self.yahoo_service.get_net_income(company)
-        shares_number = self.yahoo_service.get_shares_number(company)
+    @classmethod
+    def get_company_PE(cls, company: str) -> dict[str, Optional[float]]:
+        '''
+        net_income: чистая прибыль компании за все доступные годы
+        share_number: количество акций компании за все доступные годы
+        share_price_in_year: цена акций компании в определенный год
+        company_PE: вычисленный мультипликатор за все возможные годы
 
-        net_income = self.convertTimestamp(net_income)
-        shares_number = self.convertTimestamp(shares_number)
-        prices, company_PE = {}, {}
+        P/E - соотношение капитализации компании и ее прибыли
+        '''
+        company_PE: dict[str, Optional[float]] = {}
+        net_income: dict[str, Optional[float]] = cls.yahoo_service.get_net_income(company)
+        shares_number: dict[str, Optional[float]] = cls.yahoo_service.get_shares_number(company)
 
-        prices = self.convertPrice(net_income, company)
-
-        for net_income_, shares_number_, price_ in zip(net_income.items(), shares_number.items(), prices.items()):
-            pe = int(price_[1]) / (net_income_[1] / shares_number_[1])
-            company_PE[net_income_[0]] = round(pe, 2)
-
+        for year, net_income_, shares_number_ in zip(net_income.keys(), net_income.values(), shares_number.values()):
+            share_price_in_year = \
+                list((cls.yahoo_service.get_price_per_start_end_period(company, year, year)).values())[0]
+            pe_value: float = (shares_number_ * share_price_in_year) / net_income_
+            company_PE[year] = pe_value
         return company_PE
 
-    def get_company_PB(self, company: str) -> dict:
-        shares_number = self.yahoo_service.get_shares_number(company)
-        shares_number = self.convertTimestamp(shares_number)
+    @classmethod
+    def get_company_PB(cls, company: str) -> dict[str, Optional[float]]:
+        '''
+        P/B - отношение капитализации компанию к балансовой стоимости ее активов
+        возвращает словарь с мультипликатором P/B за достпные годы.Возможно значение nan
+        '''
+        pb: dict[str, Optional[float]] = {}
+        shares_number: dict[str, Optional[float]] = cls.yahoo_service.get_shares_number(company)
+        stockholders_equity: dict[str, Optional[float]] = cls.yahoo_service.get_stockholders_equity(company)
 
-        stockholders_Equity = self.yahoo_service.get_Stockholders_Equity(company)
-        stockholders_Equity = self.convertTimestamp(stockholders_Equity)
-
-        prices = self.convertPrice(shares_number, company)
-        marketcap, pb = {}, {}
-
-        for shares, prices in zip(shares_number.items(), prices.items()):
-            marketcap[shares[0]] = shares[1] * prices[1]
-
-        for marketcap_, stockholders_Equity_ in zip(marketcap.items(), stockholders_Equity.items()):
-            pb[stockholders_Equity_[0]] = round(marketcap_[1] / stockholders_Equity_[1], 3)
-
+        for year, shares_number_, stockholders_equity_ in zip(shares_number.keys(), shares_number.values(),
+                                                              stockholders_equity.values()):
+            share_price_in_year = \
+                list((cls.yahoo_service.get_price_per_start_end_period(company, year, year)).values())[0]
+            market_cap: float = shares_number_ * share_price_in_year
+            pb[year] = market_cap / stockholders_equity_
         return pb
 
-    def get_company_ROE(self, company: str) -> dict:
-        net_income = self.yahoo_service.get_net_income(company)
-        net_income = self.convertTimestamp(net_income)
+    @classmethod
+    def get_company_ROE(cls, company: str) -> dict[str, Optional[float]]:
+        '''
+        ROE  - показатель рнетабельности капитала
+        возвращает словарь с мультипликатором ROE за достпные годы.Возможно значение nan
 
-        stockholders_Equity = self.yahoo_service.get_Stockholders_Equity(company)
-        stockholders_Equity = self.convertTimestamp(stockholders_Equity)
+        '''
+        roe: dict[str, Optional[float]] = {}
+        net_income: dict[str, Optional[float]] = cls.yahoo_service.get_net_income(company)
+        stockholders_equity: dict[str, Optional[float]] = cls.yahoo_service.get_stockholders_equity(company)
 
-        roe = {}
-
-        for net_income_, stockholders_Equity_ in zip(net_income.items(), stockholders_Equity.items()):
-            roe[net_income_[0]] = round(net_income_[1] / stockholders_Equity_[1], 3)
-
+        for year, net_income_, stockholders_Equity_ in zip(net_income.keys(), net_income.values(),
+                                                           stockholders_equity.values()):
+            roe[year] = round(net_income_ / stockholders_Equity_, 3)
         return roe
 
-    def get_company_Dept_Eq(self, company: str) -> dict:
-        stockholders_Equity = self.yahoo_service.get_Stockholders_Equity(company)
-        stockholders_Equity = self.convertTimestamp(stockholders_Equity)
+    @classmethod
+    def get_company_dept_eq(cls, company: str) -> dict[str, Optional[float]]:
+        '''D/E отражает соотношение долга к собственному капиталу в активах компании.
+        возвращает словарь с мультипликатором D/E за достпные годы.Возможно значение nan
+        '''
+        dept_eq: dict[str, Optional[float]] = {}
+        stockholders_equity: dict[str, Optional[float]] = cls.yahoo_service.get_stockholders_equity(company)
+        dept: dict[str, Optional[float]] = cls.yahoo_service.get_company_dept(company)
 
-        dept = self.yahoo_service.get_company_Dept(company)
-        dept = self.convertTimestamp(dept)
-
-        dept_eq = {}
-
-        for dept_, stockholders_Equity in zip(dept.items(), stockholders_Equity.items()):
-            dept_eq[dept_[0]] = round(dept_[1] / stockholders_Equity[1], 3)
-
+        for year, dept_, stockholders_Equity in zip(dept.keys(), dept.values(), stockholders_equity.values()):
+            dept_eq[year] = round(dept_ / stockholders_Equity, 3)
         return dept_eq
 
-    def get_company_EPS(self, company: str) -> dict:
-        net_income = self.yahoo_service.get_net_income(company)
-        net_income = self.convertTimestamp(net_income)
+    @classmethod
+    def get_company_EPS(cls, company: str) -> dict[str, Optional[float]]:
+        '''
+        EPS - позывает, сколько чистой прибыли приходится на одну акцию
+        возвращает словарь с мультипликатором EPS за достпные годы.Возможно значение nan
+        '''
+        eps: dict[str, Optional[float]] = {}
+        net_income: dict[str, Optional[float]] = cls.yahoo_service.get_net_income(company)
+        shares_number: dict[str, Optional[float]] = cls.yahoo_service.get_shares_number(company)
 
-        shares_number = self.yahoo_service.get_shares_number(company)
-        shares_number = self.convertTimestamp(shares_number)
-
-        eps = {}
-
-        for net_income_, shares_number_ in zip(net_income.items(), shares_number.items()):
-            eps[net_income_[0]] = round(net_income_[1] / shares_number_[1], 3)
+        for year, net_income_, shares_number_ in zip(net_income.keys(), net_income.values(), shares_number.values()):
+            eps[year] = round(net_income_ / shares_number_, 3)
         return eps
 
-    def get_Quick_Ratio(self, company: str) -> dict:
-        equivalents_And_Short_Term_Investment = self.yahoo_service.get_Equivalents_And_Short_Term_Investment(company)
-        equivalents_And_Short_Term_Investment = self.convertTimestamp(equivalents_And_Short_Term_Investment)
+    @classmethod
+    def get_quick_ratio(cls, company: str) -> dict[str, Optional[float]]:
+        '''
+        Quick Ratio — это коэффициент быстрой ликвидности, который показывает
+        способность компании выполнять свои
+        краткосрочные обязательства с помощью наиболее ликвидных активов
+        возвращает словарь с мультипликатором quick_ratio за достпные годы.Возможно значение nan
+        '''
+        quick_ratio: dict[str, Optional[float]] = {}
+        equivalents_and_short_term_investment: dict[
+            str, Optional[float]] = cls.yahoo_service.get_equivalents_and_short_term_investment(company)
+        accounts_receivable: dict[str, Optional[float]] = cls.yahoo_service.get_accounts_receivable(company)
+        current_liabilities: dict[str, Optional[float]] = cls.yahoo_service.get_current_liabilities(company)
 
-        accounts_Receivable = self.yahoo_service.get_Accounts_Receivable(company)
-        accounts_Receivable = self.convertTimestamp(accounts_Receivable)
-
-        current_Liabilities = self.yahoo_service.get_Current_Liabilities(company)
-        current_Liabilities = self.convertTimestamp(current_Liabilities)
-
-        quick_ratio = {}
-
-        for EASTI, accounts_Receivable_, current_Liabilities_ in zip(equivalents_And_Short_Term_Investment.items(),
-                                                                     accounts_Receivable.items(),
-                                                                     current_Liabilities.items()):
-            quick_ratio[EASTI[0]] = round((EASTI[1] + accounts_Receivable_[1]) / current_Liabilities_[1], 3)
-
+        for year, EASTI, accounts_Receivable_, current_Liabilities_ in zip(equivalents_and_short_term_investment.keys(),
+                                                                           equivalents_and_short_term_investment.values(),
+                                                                           accounts_receivable.values(),
+                                                                           current_liabilities.values()):
+            quick_ratio[year] = round((EASTI + accounts_Receivable_) / current_Liabilities_, 3)
         return quick_ratio
 
-    def convertPrice(self, data: dict, company) -> dict:
-        prices = {}
-        for key, _ in data.items():
-            try:
-                price = \
-                    self.yahoo_service.get_history_in_year(company, (datetime.strptime(key, '%Y-%m-%d')) - timedelta(2),
-                                                           (datetime.strptime(key, '%Y-%m-%d')) - timedelta(1),
-                                                           '1d').head().iloc[0]
-                prices[((datetime.strptime(key, '%Y-%m-%d')) - timedelta(2)).strftime('%Y-%m-%d')] = price
-            except:
-                price = \
-                    self.yahoo_service.get_history_in_year(company, (datetime.strptime(key, '%Y-%m-%d')) - timedelta(5),
-                                                           (datetime.strptime(key, '%Y-%m-%d')) - timedelta(1),
-                                                           '1d').head().iloc[0]
-                prices[((datetime.strptime(key, '%Y-%m-%d')) - timedelta(2)).strftime('%Y-%m-%d')] = price
+    @classmethod
+    def get_average_multi(cls, all_companies: [str]) -> AllMulti:
+        '''
+        Возвращает среднее значение мультипликатора среди компаний за доступные годы
+        '''
+        values: list = []
+        for multi in MultiEnum:
+            average_muiltiplactures = {}
+            for company in all_companies:
+                average_muiltiplactures = cls._calculate_average_value(average_muiltiplactures,
+                                                                       cls._choose_multiplacture(company,
+                                                                                                 multi))
+            values.append(average_muiltiplactures)
+        return AllMulti(*values)
 
-        return prices
+    @classmethod
+    def get_all_available_multi(cls, company, last_year=False) -> AllMulti:
+        '''возворащает все определенные мультипликаторы
+        при last_year=True возвращает значения мультипликаторов только за последний год
+        '''
+        multi_values: list = []
+        for m in MultiEnum:
+            multi_values.append(cls._choose_multiplacture(company, m))
 
-    def convertTimestamp(self, data: dict) -> dict:
-        keys, values, dates = [], [], []
-        result_dict = {}
+        if not last_year:
+            return AllMulti(*multi_values)
+        else:
+            last_multi_values  = []
+            for multi in multi_values:
+                last_multi_values.append(multi[list(multi.keys())[-1]])
+            return AllMulti(*last_multi_values)
 
-        for key, _ in data.items():
-            keys.append(key)
-            try:
-                int(data[key])
-                values.append(data[key])
-            except:
-                pass
 
-        for date_ in keys:
-            date_format = date_.to_pydatetime().date()
-            str_date = date_format.strftime('%Y-%m-%d')
-            if str_date != '2019-12-31':
-                dates.append(str_date)
 
-        dates = dates[::-1]
-        values = values[::-1]
-        for date, value in zip(dates, values):
-            result_dict[date] = value
+    @classmethod
+    def _choose_multiplacture(cls, company: str, multi: MultiEnum) -> dict[str, Optional[float]]:
+        '''
+        Возвращает мультипликатор компании
+        '''
+        if multi.value == MultiEnum.pe:
+            return cls.get_company_PE(company)
+        elif multi.value == MultiEnum.pb:
+            return cls.get_company_PB(company)
+        elif multi.value == MultiEnum.roe:
+            return cls.get_company_ROE(company)
+        elif multi.value == MultiEnum.eps:
+            return cls.get_company_EPS(company)
+        elif multi.value == MultiEnum.quick_ratio:
+            return cls.get_quick_ratio(company)
+        elif multi.dept_equity == MultiEnum.dept_equity:
+            return cls.get_company_dept_eq(company)
 
-        return result_dict
+    @classmethod
+    def _calculate_average_value(cls, old_average_muiltiplactures, new_average_muiltiplactures) -> dict[
+        str, Optional[float]]:
+        '''
+        Вычисляет среднее значение показателей компаний за каждый год
+        '''
+        calculated_average_muiltiplactures: dict[str, Optional[float]] = {}
 
-    def get_average_multi(self, sectors: [str], all_companies: [str], multi: str):
-        sectors_average = {}
-
-        for sec in sectors:
-            companies = all_companies[sec].split(' ')
-            sectors_average[sec] = {}
-
-            for comp in companies:
-                multiplicator = {}
-
-                if multi == 'PE':
-                    multiplicator = self.get_company_PE(comp)
-                elif multi == 'PB':
-                    multiplicator = self.get_company_PB(comp)
-                elif multi == 'ROE':
-                    multiplicator = self.get_company_ROE(comp)
-                elif multi == 'EPS':
-                    multiplicator = self.get_company_EPS(comp)
-                elif multi == 'Quick_Ratio':
-                    multiplicator = self.get_Quick_Ratio(comp)
-                elif multi == 'Dept_Eq':
-                    multiplicator = self.get_company_Dept_Eq(comp)
-
-                for key, value in multiplicator.items():
-                    date = datetime.strptime(key, '%Y-%m-%d')
-                    new_date = datetime.strftime(date, '%Y')
-
-                    if new_date in sectors_average[sec].keys():
-                        sectors_average[sec][new_date] += value
-                    else:
-                        sectors_average[sec][new_date] = value
-
-            for key, value in sectors_average[sec].items():
-                sectors_average[sec][key] = round(value / len(companies), 2)
-
-        return sectors_average
-
-    def convert_multiplacture_date_to_years(self, multiplac: [{}]) -> []:
-        new_multi = []
-        for placture in multiplac:
-            new_placture = {}
-            for key, value in placture.items():
-                date = datetime.strptime(key, '%Y-%m-%d')
-                new_date = datetime.strftime(date, '%Y')
-                new_placture[new_date] = value
-            new_multi.append(new_placture)
-        return new_multi
-
-    def comparison_average_multiplactures_years(self, multiplac: [{}], average_multiplac: [{}]) -> [{}]:
-        new_average = copy.deepcopy(average_multiplac)
-        for i, current_average_multi in enumerate(average_multiplac):
-            for key in current_average_multi.keys():
-                if key not in multiplac[i].keys():
-                    del new_average[i][key]
-
-        return new_average
+        if len(old_average_muiltiplactures) != 0:
+            for idx, (year, old_value, new_value) in enumerate(
+                    zip(old_average_muiltiplactures.keys(), old_average_muiltiplactures.values(),
+                        new_average_muiltiplactures.values())):
+                calculated_average_muiltiplactures[year] = round((old_value + new_value) / (idx + 2), 2)
+            return calculated_average_muiltiplactures
+        else:
+            return new_average_muiltiplactures
 
 
 if __name__ == "__main__":
     print(time.strftime('%X'))
     b = BuilderMultiplactures()
-    print(b.get_company_PE('goog'))
-    print(b.get_company_PB('goog'))
-    print(b.get_company_ROE('goog'))
-    print(b.get_company_Dept_Eq('goog'))
-    print(b.get_company_EPS('goog'))
-    print(b.get_Quick_Ratio('goog'))
+    # b._calculate_average_value({"10": 15, "11":16}, {"10":15, "11":16})
+    print()
+    print(b.get_all_available_multi('GOOG'))
+    # print(b.get_average_multi(['GOOG', 'META', 'AMZN'], MultiEnum.roe))
     print(time.strftime('%X'))
-    #
-    # pe = b.get_company_PE('goog')
-    # pb = b.get_company_PB('goog')
-    # print('new', b.convert_multiplacture_date_to_years([pe, pb]))
-    #
-    # sectors = ['Communication Services', 'Technology', 'Consumer Cyclical']
-    # sectors_comp = {'Communication Services': 'GOOG META', 'Technology': 'AAPL MSFT NVDA',
-    #                 'Consumer Cyclical': 'TSLA AMZN'}
-    #
-    # print(b.get_average_multi(sectors, sectors_comp, 'PB'))
-
-    # sectors_average_PE = {}
-    #
-    # for sec in sectors:
-    #     companies = sectors_comp[sec].split(' ')
-    #     sectors_average_PE[sec] = {}
-    #
-    #     for comp in companies:
-    #         pe = b.get_company_PE(comp)
-    #         for key, value in pe.items():
-    #             date = datetime.strptime(key, '%Y-%m-%d')
-    #             new_date = datetime.strftime(date, '%Y')
-    #
-    #             if new_date in sectors_average_PE[sec].keys():
-    #                 sectors_average_PE[sec][new_date] += value
-    #             else:
-    #                 sectors_average_PE[sec][new_date] = value
-    #
-    #     for key, value in sectors_average_PE[sec].items():
-    #         sectors_average_PE[sec][key] = round(value / len(companies), 2)
-    #
-    # print(sectors_average_PE)
