@@ -102,9 +102,7 @@ class BuilderCompany:
         """
         data: CompanyGeneralData = self._get_base_data(company)
         return data
-
-    # @lru_cache(maxsize=None)
-    # @logging
+        
     @timed_lru_cache(20)
     @convert_rows_to_dict
     def get_all_data(self, company: str) -> CompanyDataAll:
@@ -152,38 +150,3 @@ class BuilderCompany:
         sector: str = self.finance_service.get_company_sector(company)
         logo_url: str = f'https://companiesmarketcap.com/img/company-logos/64/{company}.webp'
         return CompanyGeneralData(company, logo_url, sector, market_cap, month_change)
-
-
-# def get_preview_in_sector(self, companies_in_sector: [str]) -> []:
-#     """
-#     :param companies_in_sector: список тикеров компаний в одном секторе с целевой компанией
-#     :return: превью компаний, которые входят в один сектор с целевой компанией
-#     """
-#     companies_data = []
-#     with ThreadPoolExecutor() as executor:
-#         futures = [executor.submit(self.create_data_preview, company) for company in companies_in_sector]
-#
-#     for future in futures:
-#         companies_data.append((future.result())._asdict())
-#     return companies_data
-
-
-if __name__ == '__main__':
-    companies = [
-        'GOOG',
-        'AAPL',
-        'MSFT',
-        'NVDA',
-        'META',
-        'TSLA',
-        'AMZN'
-    ]
-    builder = BuilderCompany()
-    for i in range(3):
-        print()
-        print(time.strftime('%X'))
-        t1 = datetime.now()
-        print(builder.get_all_data(companies[0]))
-        t2 = datetime.now()
-        print(t2 - t1)
-        time.sleep(10)
