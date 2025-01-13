@@ -1,16 +1,15 @@
-from typing import Union, NamedTuple
+from typing import Union
 
 from fastapi import HTTPException, status
 
 from jwt.exceptions import InvalidTokenError
-from passlib.context import CryptContext
 import jwt
 from datetime import datetime, timedelta, timezone
 from src.config import settings
 from src.users_api.repositories.User_repository import UserRepository
 from src.users_api.schemas.schemas import UserDTO, Token
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 user_repository = UserRepository()
 
 bearer_payload_email: str = "useremail"

@@ -26,7 +26,7 @@ class CompanyFinancialData(NamedTuple):
     DEPT_EQ: dict
 
 
-class CompanyAverageFinancialData(NamedTuple):
+class CompanyAverageFinancialDataInSector(NamedTuple):
     average_multi_in_sector: dict
 
 
@@ -44,16 +44,13 @@ class CompanyRecommendations(NamedTuple):
 class CompanyDataAll(NamedTuple):
     general_data: CompanyGeneralData
     financial_data: CompanyFinancialData
-    average_data: CompanyAverageFinancialData
+    average_data: CompanyAverageFinancialDataInSector
     price_data: CompanyPriceData
     recommendations_data: CompanyRecommendations
 
 
-class CompanyTable(NamedTuple):
-    name: str
-    logo: str
-    sector: str
-    market_cap: float
+class CompanyGeneralFinance(NamedTuple):
+    general_data: CompanyGeneralData
     financial_data: CompanyFinancialData
 
 
@@ -64,7 +61,10 @@ def convert_rows_to_dict(func):
         result: CompanyDataAll = func(*args, **kwargs)
         result_dict = {}
         for row, value in result._asdict().items():
-            result_dict[row] = value._asdict()
+            try:
+                result_dict[row] = value._asdict()
+            except:
+                result_dict[row] = value
         return result_dict
 
     return wrapper
@@ -95,6 +95,7 @@ class BuilderCompany:
         self.builder_company_sectors = BuilderCompanySectors(available_companies)
 
     @timed_lru_cache(20)
+    @convert_rows_to_dict
     def get_data_preview(self, company: str):
         """
         :param company: тикер компании
@@ -103,8 +104,6 @@ class BuilderCompany:
         data: CompanyGeneralData = self._get_base_data(company)
         return data
 
-    # @lru_cache(maxsize=None)
-    # @logging
     @timed_lru_cache(20)
     @convert_rows_to_dict
     def get_all_data(self, company: str) -> CompanyDataAll:
@@ -114,32 +113,39 @@ class BuilderCompany:
         :return: обьект со всееми возможными полями
         """
         general_data: CompanyGeneralData = self._get_base_data(company)
+
         financial_data: CompanyFinancialData = CompanyFinancialData(
             *self.builder_multiplactures.get_all_available_multi(company))
-        average_financial_data: CompanyAverageFinancialData = CompanyAverageFinancialData(
-            self.builder_multiplactures.get_average_multi(company)._asdict())
+
+        average_financial_multi_in_sector: CompanyAverageFinancialDataInSector = CompanyAverageFinancialDataInSector(
+            self.builder_multiplactures.get_average_multi(
+                self.builder_company_sectors.another_company_in_company_sector(company)
+            )._asdict()
+        )
+
         price_data: CompanyPriceData = CompanyPriceData(
             self.finance_service.get_target_price_information(company)._asdict(),
             self.finance_service.get_history_share_price_per_period(company, '1mo', '1d'),
             self.finance_service.get_history_share_price_per_period(company, '5y', '1wk'))
+
         buy_recommendations: CompanyRecommendations = CompanyRecommendations(
             self.finance_service.get_buy_recommendation(company),
             self.finance_service.get_recommendations_summary_current_month(company)._asdict())
-        return CompanyDataAll(general_data, financial_data, average_financial_data, price_data, buy_recommendations)
+
+        return CompanyDataAll(general_data, financial_data, average_financial_multi_in_sector, price_data,
+                              buy_recommendations)
 
     @timed_lru_cache(20)
-    def create_data_table(self, company: str) -> CompanyTable:
+    def get_general_and_finance_data(self, company: str) -> CompanyGeneralFinance:
         """
         капитализация, сектор компании, мультипликаторы, логотип
         :param company: тикер компании
         :return:
         """
-        logo_url: str = f'https://companiesmarketcap.com/img/company-logos/64/{company}.webp'
-        sector: str = self.finance_service.get_company_sector(company)
-        market_cap: float = self.finance_service.get_marketcap(company)
+        general_data: CompanyGeneralData = self._get_base_data(company)
         financial: CompanyFinancialData = CompanyFinancialData(
             *self.builder_multiplactures.get_all_available_multi(company, last_year=True))
-        return CompanyTable(company, logo_url, sector, market_cap, financial)
+        return CompanyGeneralFinance(general_data, financial)
 
     def _get_base_data(self, company: str) -> CompanyGeneralData:
         """
@@ -153,37 +159,7 @@ class BuilderCompany:
         logo_url: str = f'https://companiesmarketcap.com/img/company-logos/64/{company}.webp'
         return CompanyGeneralData(company, logo_url, sector, market_cap, month_change)
 
-
-# def get_preview_in_sector(self, companies_in_sector: [str]) -> []:
-#     """
-#     :param companies_in_sector: список тикеров компаний в одном секторе с целевой компанией
-#     :return: превью компаний, которые входят в один сектор с целевой компанией
-#     """
-#     companies_data = []
-#     with ThreadPoolExecutor() as executor:
-#         futures = [executor.submit(self.create_data_preview, company) for company in companies_in_sector]
-#
-#     for future in futures:
-#         companies_data.append((future.result())._asdict())
-#     return companies_data
+    def get_preview_in_sector(self, companies_in_sector: [str]) -> []:
+        pass
 
 
-if __name__ == '__main__':
-    companies = [
-        'GOOG',
-        'AAPL',
-        'MSFT',
-        'NVDA',
-        'META',
-        'TSLA',
-        'AMZN'
-    ]
-    builder = BuilderCompany()
-    for i in range(3):
-        print()
-        print(time.strftime('%X'))
-        t1 = datetime.now()
-        print(builder.get_all_data(companies[0]))
-        t2 = datetime.now()
-        print(t2 - t1)
-        time.sleep(10)

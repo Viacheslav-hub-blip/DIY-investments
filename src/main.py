@@ -3,7 +3,7 @@ from starlette.middleware.cors import CORSMiddleware
 from src.finance_api.Routers.routers import router as finance_router
 from src.users_api.routers import router as user_router
 
-from src.langchain_api.routers import router as router_langchain
+from src.langchain_api.routers.routers import router as router_langchain
 
 app = FastAPI()
 

@@ -10,11 +10,13 @@ class BuilderCompanySectors:
 
     def another_company_in_company_sector(self, company: str) -> list[str]:
         '''Вовзращает другие компании в секторе исходной компании'''
+
         for sector, companies in self.sectors_with_companies.items():
             if company in companies:
-                companies_in_sector: list[str] = self.sectors_with_companies[sector]
+                companies_in_sector: list[str] = self.sectors_with_companies[sector].copy()
                 companies_in_sector.remove(company)
                 return companies_in_sector
+
 
     def _initialize_sectors_with_companies(self) -> dict[str, list[str]]:
         '''
@@ -28,21 +30,3 @@ class BuilderCompanySectors:
             else:
                 sectors_with_companies[company_sector] = [company]
         return sectors_with_companies
-
-
-if __name__ == "__main__":
-    print(time.strftime('%X'))
-    companies = [
-        'GOOG',
-        'AAPL',
-        'MSFT',
-        'NVDA',
-        'META',
-        'TSLA',
-        'AMZN'
-    ]
-    builder = BuilderCompanySectors(companies)
-    companies = builder.another_company_in_company_sector(companies[0])
-    print(companies)
-    # companies.remove('GOOG')
-    # print(companies)

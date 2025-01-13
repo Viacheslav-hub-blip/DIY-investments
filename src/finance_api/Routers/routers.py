@@ -1,6 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from fastapi import APIRouter
-import time
 from src.finance_api.Builders.BuilderCompanyData import BuilderCompany
 from src.finance_api.config import companies
 
@@ -16,13 +14,15 @@ company_builder = BuilderCompany()
 async def get_companies_data_preview():
     companies_data = []
     for company in companies:
-        company_builder.get_data_preview(company)
+        companies_data.append(company_builder.get_data_preview(company))
     return companies_data
 
 
 @router.get("/company")
 async def get_company_all_data(company: str):
-    return company_builder.get_all_data(company)
+    data  = company_builder.get_all_data(company)
+    print(data)
+    return data
 
 
 @router.get("/liked_companies")
@@ -30,6 +30,7 @@ async def get_liked_companies_preview(companies: str):
     companies = [comp for comp in companies.split(' ') if len(comp) > 1]
     companies_data = []
     for company in companies:
+        print(company)
         companies_data.append(company_builder.get_data_preview(company))
     return companies_data
 

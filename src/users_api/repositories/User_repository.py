@@ -1,6 +1,6 @@
 from typing import Optional
 from sqlalchemy import select, update
-from src.database.databse import session_factory
+from src.users_api.database.databse import session_factory
 from src.users_api.repositories.base_rep import SQLAlchemyRepository
 from src.users_api.models.models import UserORM
 from src.users_api.schemas.schemas import UserDTO

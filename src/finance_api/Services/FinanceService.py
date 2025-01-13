@@ -25,7 +25,7 @@ def convert_time_stamp(func):
 
     def wrapper(*args, **kwargs) -> dict[str, Any]:
         converted_dict: dict[str, float] = {}
-        result_func: Series = func(*args, **kwargs)
+        result_func = func(*args, **kwargs)
 
         for date, value in result_func.items():
             date_str = date.to_pydatetime().date().strftime("%Y-%m-%d")
@@ -157,3 +157,8 @@ class FinanceService:
     def get_current_liabilities(cls, company: str) -> dict[str, Optional[float]]:
         #  Текущие обязательства
         return cls.yahoo_api.get_balance_sheet(company).loc[['Current Liabilities']].to_dict(orient='records')[0]
+
+
+if __name__ == "__main__":
+    service  = FinanceService()
+    print(service.get_stockholders_equity("AAPL"))

@@ -136,6 +136,7 @@ class BuilderMultiplactures:
         values: list = []
         for multi in MultiEnum:
             average_muiltiplactures = {}
+
             for company in all_companies:
                 average_muiltiplactures = cls._calculate_average_value(average_muiltiplactures,
                                                                        cls._choose_multiplacture(company,
@@ -155,12 +156,10 @@ class BuilderMultiplactures:
         if not last_year:
             return AllMulti(*multi_values)
         else:
-            last_multi_values  = []
+            last_multi_values = []
             for multi in multi_values:
                 last_multi_values.append(multi[list(multi.keys())[-1]])
             return AllMulti(*last_multi_values)
-
-
 
     @classmethod
     def _choose_multiplacture(cls, company: str, multi: MultiEnum) -> dict[str, Optional[float]]:
@@ -187,7 +186,6 @@ class BuilderMultiplactures:
         Вычисляет среднее значение показателей компаний за каждый год
         '''
         calculated_average_muiltiplactures: dict[str, Optional[float]] = {}
-
         if len(old_average_muiltiplactures) != 0:
             for idx, (year, old_value, new_value) in enumerate(
                     zip(old_average_muiltiplactures.keys(), old_average_muiltiplactures.values(),
@@ -196,13 +194,3 @@ class BuilderMultiplactures:
             return calculated_average_muiltiplactures
         else:
             return new_average_muiltiplactures
-
-
-if __name__ == "__main__":
-    print(time.strftime('%X'))
-    b = BuilderMultiplactures()
-    # b._calculate_average_value({"10": 15, "11":16}, {"10":15, "11":16})
-    print()
-    print(b.get_all_available_multi('GOOG'))
-    # print(b.get_average_multi(['GOOG', 'META', 'AMZN'], MultiEnum.roe))
-    print(time.strftime('%X'))

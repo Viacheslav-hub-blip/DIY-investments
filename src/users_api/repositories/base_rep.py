@@ -1,7 +1,7 @@
 # репозиторий  - самый низкйи уровень работы с базой
 from abc import ABC, abstractmethod
 from typing import Optional
-from src.database.databse import session_factory
+from src.users_api.database.databse import session_factory
 from sqlalchemy import insert, select, delete
 
 

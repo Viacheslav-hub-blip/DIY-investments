@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column
-from src.database.databse import Base, engine
+from src.users_api.database.databse import Base, engine
 
 
 class SyncOrm:
