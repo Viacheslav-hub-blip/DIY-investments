@@ -1,8 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from src.finance_api.Finance_api import YahooApi
-
-
 class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int

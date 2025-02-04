@@ -1,5 +1,5 @@
 from pandas import Series
-from src.finance_api.Finance_api import YahooApi
+from src.finance_api.finance_api import YahooApi
 from typing import NamedTuple, Any, Optional
 
 
@@ -29,7 +29,7 @@ def convert_time_stamp(func):
 
         for date, value in result_func.items():
             date_str = date.to_pydatetime().date().strftime("%Y-%m-%d")
-            converted_dict[date_str] = value
+            converted_dict[date_str] = round(value,3)
 
         return converted_dict
 

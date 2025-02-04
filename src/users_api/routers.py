@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.users_api.schemas.schemas import UserInsertDTO, UserLogin, TokenGetting, UpdateLikedCompany
 from src.users_api.dependencies import user_service
-from src.users_api.services.UserService import UserService
+from src.users_api.services.user_service import UserService
 from typing import Annotated
 from src.users_api.schemas.schemas import UserDTO
 from src.users_api.auth import UserAuth

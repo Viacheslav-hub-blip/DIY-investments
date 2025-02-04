@@ -1,7 +1,9 @@
 import enum
 import time
 from typing import Optional, NamedTuple
-from src.finance_api.Services.FinanceService import FinanceService
+import re
+from src.finance_api.Services.finance_service import FinanceService
+import math
 
 
 class MultiEnum(enum.Enum):
@@ -43,7 +45,8 @@ class BuilderMultiplactures:
             share_price_in_year = \
                 list((cls.yahoo_service.get_price_per_start_end_period(company, year, year)).values())[0]
             pe_value: float = (shares_number_ * share_price_in_year) / net_income_
-            company_PE[year] = pe_value
+            year = re.findall('(\d{4})', year)[0]
+            if not math.isnan(pe_value): company_PE[year] = round(pe_value, 3)
         return company_PE
 
     @classmethod
@@ -61,7 +64,8 @@ class BuilderMultiplactures:
             share_price_in_year = \
                 list((cls.yahoo_service.get_price_per_start_end_period(company, year, year)).values())[0]
             market_cap: float = shares_number_ * share_price_in_year
-            pb[year] = market_cap / stockholders_equity_
+            year = re.findall('(\d{4})', year)[0]
+            if not math.isnan(market_cap): pb[year] = round(market_cap / stockholders_equity_, 3)
         return pb
 
     @classmethod
@@ -77,7 +81,9 @@ class BuilderMultiplactures:
 
         for year, net_income_, stockholders_Equity_ in zip(net_income.keys(), net_income.values(),
                                                            stockholders_equity.values()):
-            roe[year] = round(net_income_ / stockholders_Equity_, 3)
+            res = round(net_income_ / stockholders_Equity_, 3)
+            year = re.findall('(\d{4})', year)[0]
+            if not math.isnan(res): roe[year] = res
         return roe
 
     @classmethod
@@ -90,7 +96,9 @@ class BuilderMultiplactures:
         dept: dict[str, Optional[float]] = cls.yahoo_service.get_company_dept(company)
 
         for year, dept_, stockholders_Equity in zip(dept.keys(), dept.values(), stockholders_equity.values()):
-            dept_eq[year] = round(dept_ / stockholders_Equity, 3)
+            res = round(dept_ / stockholders_Equity, 3)
+            year = re.findall('(\d{4})', year)[0]
+            if not math.isnan(res): dept_eq[year] = res
         return dept_eq
 
     @classmethod
@@ -104,7 +112,9 @@ class BuilderMultiplactures:
         shares_number: dict[str, Optional[float]] = cls.yahoo_service.get_shares_number(company)
 
         for year, net_income_, shares_number_ in zip(net_income.keys(), net_income.values(), shares_number.values()):
-            eps[year] = round(net_income_ / shares_number_, 3)
+            res = round(net_income_ / shares_number_, 3)
+            year = re.findall('(\d{4})', year)[0]
+            if not math.isnan(res): eps[year] = res
         return eps
 
     @classmethod
@@ -125,7 +135,9 @@ class BuilderMultiplactures:
                                                                            equivalents_and_short_term_investment.values(),
                                                                            accounts_receivable.values(),
                                                                            current_liabilities.values()):
-            quick_ratio[year] = round((EASTI + accounts_Receivable_) / current_Liabilities_, 3)
+            res = round((EASTI + accounts_Receivable_) / current_Liabilities_, 3)
+            year = re.findall('(\d{4})', year)[0]
+            if not math.isnan(res): quick_ratio[year] = res
         return quick_ratio
 
     @classmethod
@@ -166,17 +178,17 @@ class BuilderMultiplactures:
         '''
         Возвращает мультипликатор компании
         '''
-        if multi.value == MultiEnum.pe:
+        if multi == MultiEnum.pe:
             return cls.get_company_PE(company)
-        elif multi.value == MultiEnum.pb:
+        elif multi == MultiEnum.pb:
             return cls.get_company_PB(company)
-        elif multi.value == MultiEnum.roe:
+        elif multi == MultiEnum.roe:
             return cls.get_company_ROE(company)
-        elif multi.value == MultiEnum.eps:
+        elif multi == MultiEnum.eps:
             return cls.get_company_EPS(company)
-        elif multi.value == MultiEnum.quick_ratio:
+        elif multi == MultiEnum.quick_ratio:
             return cls.get_quick_ratio(company)
-        elif multi.dept_equity == MultiEnum.dept_equity:
+        elif multi == MultiEnum.dept_equity:
             return cls.get_company_dept_eq(company)
 
     @classmethod
@@ -194,3 +206,8 @@ class BuilderMultiplactures:
             return calculated_average_muiltiplactures
         else:
             return new_average_muiltiplactures
+
+
+if __name__ == "__main__":
+    builder_multi = BuilderMultiplactures()
+    print(builder_multi.get_average_multi(['AAPL', 'GOOG']))

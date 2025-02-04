@@ -1,5 +1,5 @@
 import time
-from src.finance_api.Services.FinanceService import FinanceService
+from src.finance_api.Services.finance_service import FinanceService
 
 
 class BuilderCompanySectors:

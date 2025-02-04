@@ -1,5 +1,5 @@
 import pytest
-from src.finance_api.Builders.BuilderCompanyData import BuilderCompany
+from src.finance_api.Builders.builder_company_data import BuilderCompany
 
 
 @pytest.mark.parametrize('company', 'GOOG')

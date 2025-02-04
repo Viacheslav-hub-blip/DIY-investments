@@ -1,5 +1,7 @@
+import json
+
 from fastapi import APIRouter
-from src.finance_api.Builders.BuilderCompanyData import BuilderCompany
+from src.finance_api.Builders.builder_company_data import BuilderCompany
 from src.finance_api.config import companies
 
 router = APIRouter(
@@ -21,8 +23,11 @@ async def get_companies_data_preview():
 @router.get("/company")
 async def get_company_all_data(company: str):
     data  = company_builder.get_all_data(company)
-    print(data)
     return data
+
+@router.get("/another_companies")
+async def get_another_companies_data(base_company: str):
+    return company_builder.get_another_companies_in_sector(base_company)
 
 
 @router.get("/liked_companies")
@@ -33,13 +38,3 @@ async def get_liked_companies_preview(companies: str):
         print(company)
         companies_data.append(company_builder.get_data_preview(company))
     return companies_data
-
-
-# @router.get("/company_table")
-# async def get_company_data_for_table():
-#     companies_data = []
-#     with ThreadPoolExecutor() as executor:
-#         futures = [executor.submit(builder.createDataTable, my_data) for my_data in companies]
-#     for future in as_completed(futures):
-#         companies_data.append((future.result())._asdict())
-#     return companies_data

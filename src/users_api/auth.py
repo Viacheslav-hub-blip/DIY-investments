@@ -6,7 +6,7 @@ from jwt.exceptions import InvalidTokenError
 import jwt
 from datetime import datetime, timedelta, timezone
 from src.config import settings
-from src.users_api.repositories.User_repository import UserRepository
+from src.users_api.repositories.user_repository import UserRepository
 from src.users_api.schemas.schemas import UserDTO, Token
 
 # pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

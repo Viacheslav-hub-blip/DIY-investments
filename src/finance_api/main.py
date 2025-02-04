@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-from src.news_api.routers.routers import router as news_api_router
+from src.finance_api.Routers.routers import router as finance_api_router
 from starlette.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-app.include_router(news_api_router)
+app.include_router(finance_api_router)
 
 origins = [
     "http://localhost:5173",
